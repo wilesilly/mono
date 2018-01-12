@@ -150,5 +150,7 @@ namespace Mono {
 		}
 #endif
 
+		[MethodImplAttribute (MethodImplOptions.InternalCall)]
+		internal static extern void GFree (IntPtr ptr);
 	}
 }
