@@ -639,11 +639,29 @@ namespace System.Net.NetworkInformation {
 		[DllImport ("__Internal")]
 		static extern int _monodroid_get_android_api_level ();
 
-		[DllImport ("__Internal")]
-		static extern bool _monodroid_get_network_interface_up_state (string ifname, ref bool is_up);
+		static bool GetUpState (string ifname, out bool is_up)
+		{
+			unsafe {
+				fixed (byte *ifname_p = Encoding.UTF8.GetBytes(ifname)) {
+					return GetUpState(ifname_p, out is_up);
+				}
+			}
+		}
 
-		[DllImport ("__Internal")]
-		static extern bool _monodroid_get_network_interface_supports_multicast (string ifname, ref bool supports_multicast);
+		[MethodImplAttribute (MethodImplOptions.InternalCall)]
+		static unsafe extern bool GetUpState (byte *ifname, out bool is_up);
+
+		static bool GetSupportsMulticast (string ifname, out bool supports_multicast)
+		{
+			unsafe {
+				fixed (byte *ifname_p = Encoding.UTF8.GetBytes(ifname)) {
+					return GetSupportsMulticast(ifname_p, out supports_multicast);
+				}
+			}
+		}
+
+		[MethodImplAttribute (MethodImplOptions.InternalCall)]
+		static unsafe extern bool GetSupportsMulticast (byte *ifname, out bool supports_multicast);
 
 		bool android_use_java_api;
 #endif
@@ -689,11 +707,10 @@ namespace System.Net.NetworkInformation {
 					// interface is up or down. There is a way to get more detailed information but
 					// it requires an instance of the Android Context class which is not available
 					// to us here.
-					bool is_up = false;
-					if (_monodroid_get_network_interface_up_state (Name, ref is_up))
-						return is_up ? OperationalStatus.Up : OperationalStatus.Down;
-					else
+					if (!GetUpState (Name, out bool is_up))
 						return OperationalStatus.Unknown;
+
+					return is_up ? OperationalStatus.Up : OperationalStatus.Down;
 				}
 #endif
 				if (!Directory.Exists (iface_path))
@@ -738,8 +755,9 @@ namespace System.Net.NetworkInformation {
 					// files in the /sys filesystem (see https://code.google.com/p/android/issues/detail?id=205565
 					// for more information) and therefore we are forced to call into Java API in
 					// order to get the information.
-					bool supports_multicast = false;
-					_monodroid_get_network_interface_supports_multicast (Name, ref supports_multicast);
+					if (!GetSupportsMulticast (Name, out bool supports_multicast))
+						return false;
+
 					return supports_multicast;
 				}
 #endif
