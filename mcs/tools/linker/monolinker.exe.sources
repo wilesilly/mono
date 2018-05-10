@@ -19,6 +19,7 @@
 ../../../external/linker/linker/Linker/MethodReferenceExtensions.cs
 ../../../external/linker/linker/Linker/MarkingHelpers.cs
 ../../../external/linker/linker/Linker/Tracer.cs
+../../../external/linker/linker/Linker/TypeNameParser.cs
 ../../../external/linker/linker/Linker.Steps/BaseStep.cs
 ../../../external/linker/linker/Linker.Steps/LoadReferencesStep.cs
 ../../../external/linker/linker/Linker.Steps/LoadI18nAssemblies.cs
