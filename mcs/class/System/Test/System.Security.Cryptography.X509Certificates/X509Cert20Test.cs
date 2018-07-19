@@ -454,48 +454,6 @@ mgk3bWUV6ChegutbguiKrI/DbO7wPiDLxw==
 			new X509Certificate ().GetSerialNumberString ();
 		}
 
-#if !MOBILE
-		[Test]
-		[ExpectedException (typeof (NullReferenceException))]
-		public void GetObjectData_Null ()
-		{
-			X509Certificate x = new X509Certificate ();
-			ISerializable s = (x as ISerializable);
-			s.GetObjectData (null, new StreamingContext (StreamingContextStates.All));
-		}
-
-		[Test]
-		public void GetObjectData ()
-		{
-			X509Certificate x = new X509Certificate (cert1);
-			ISerializable s = (x as ISerializable);
-			Assert.IsNotNull (s, "ISerializable");
-			SerializationInfo info = new SerializationInfo (typeof (X509Certificate), new FormatterConverter ());
-			s.GetObjectData (info, new StreamingContext (StreamingContextStates.All));
-			Assert.AreEqual (1, info.MemberCount, "MemberCount");
-			byte[] raw = (byte[]) info.GetValue ("RawData", typeof (byte[]));
-		}
-#endif
-
-		[Test]
-		[ExpectedException (typeof (NullReferenceException))]
-		public void Ctor_Serialization_Null ()
-		{
-			new X509Certificate (null, new StreamingContext (StreamingContextStates.All));
-		}
-
-		[Test]
-		public void Ctor_Serialization ()
-		{
-			SerializationInfo info = new SerializationInfo (typeof (X509Certificate), new FormatterConverter ());
-			info.AddValue ("RawData", cert1);
-			X509Certificate x = new X509Certificate (info, new StreamingContext (StreamingContextStates.All));
-			Assert.AreEqual (cert1, x.GetRawCertData (), "GetRawCertData");
-			// decoding is done too
-			Assert.AreEqual ("02720006E8", x.GetSerialNumberString (), "SerialNumber");
-		}
-
-
 		[Test]
 		public void Properties ()
 		{
