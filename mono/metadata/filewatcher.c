@@ -64,7 +64,7 @@ ves_icall_System_IO_FSW_SupportsFSW (void)
 		return 3; /* kqueue */
 	else
 		return 6; /* CoreFX */
-#elif defined(HAVE_SYS_INOTIFY_H) && !defined(TARGET_ANDROID)
+#elif defined(HAVE_SYS_INOTIFY_H)
 	return 6; /* CoreFX */
 #elif HAVE_KQUEUE
 	return 3; /* kqueue */
@@ -73,14 +73,6 @@ ves_icall_System_IO_FSW_SupportsFSW (void)
 	int lib_used = 4; /* gamin */
 	int inotify_instance;
 	char *err;
-
-#if defined (TARGET_ANDROID)
-	inotify_instance = ves_icall_System_IO_InotifyWatcher_GetInotifyInstance ();
-	if (inotify_instance != -1) {
-		close (inotify_instance);
-		return 5; /* inotify */
-	}
-#endif
 
 	fam_module = mono_dl_open ("libgamin-1.so", MONO_DL_LAZY, NULL);
 	if (fam_module == NULL) {
@@ -270,18 +262,3 @@ ves_icall_System_IO_KqueueMonitor_kevent_notimeout (int *kq_ptr, gpointer change
 }
 
 #endif /* #if HAVE_KQUEUE */
-
-#ifdef HOST_IOS
-
-MONO_API char* SystemNative_RealPath(const char* path)
-{
-    g_assert(path != NULL);
-    return realpath(path, NULL);
-}
-
-MONO_API void SystemNative_Sync(void)
-{
-    sync();
-}
-
-#endif // HOST_IOS
