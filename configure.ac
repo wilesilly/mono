@@ -1002,6 +1002,14 @@ if test "x$with_structured_crashes" = "xno"; then
 AC_DEFINE(DISABLE_STRUCTURED_CRASH,1,[Do not create structured crash files during unmanaged crashes])
 fi
 
+AC_ARG_ENABLE(monodroid, [ --enable-monodroid Enable runtime support for Monodroid (Xamarin.Android)], enable_monodroid=$enableval, enable_monodroid=no)
+AM_CONDITIONAL(ENABLE_MONODROID, test x$enable_monodroid = xyes)
+
+if test x$enable_monodroid = xyes; then
+	AC_DEFINE(ENABLE_MONODROID, 1, [Enable runtime support for Monodroid (Xamarin.Android)])
+fi
+
+
 #
 # Set the build profiles and options before things which use them
 #
