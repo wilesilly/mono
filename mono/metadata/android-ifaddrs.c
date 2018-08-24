@@ -210,6 +210,37 @@
 /* Maximum interface address label size, should be more than enough */
 #define MAX_IFA_LABEL_SIZE 1024
 
+/* We're implementing getifaddrs behavior, this is the structure we use. It is exactly the same as
+ * struct ifaddrs defined in ifaddrs.h but since bionics doesn't have it we need to mirror it here.
+ */
+struct _monodroid_ifaddrs {
+	struct _monodroid_ifaddrs *ifa_next; /* Pointer to the next structure.      */
+
+	gchar *ifa_name;                      /* Name of this network interface.     */
+	guint ifa_flags;              /* Flags as from SIOCGIFFLAGS ioctl.   */
+
+	struct sockaddr *ifa_addr;           /* Network address of this interface.  */
+	struct sockaddr *ifa_netmask;        /* Netmask of this interface.          */
+	union {
+		/* At most one of the following two is valid.  If the IFF_BROADCAST
+		   bit is set in `ifa_flags', then `ifa_broadaddr' is valid.  If the
+		   IFF_POINTOPOINT bit is set, then `ifa_dstaddr' is valid.
+		   It is never the case that both these bits are set at once.  */
+		struct sockaddr *ifu_broadaddr;  /* Broadcast address of this interface. */
+		struct sockaddr *ifu_dstaddr;    /* Point-to-point destination address.  */
+	} ifa_ifu;
+	/* These very same macros are defined by <net/if.h> for `struct ifaddr'.
+	   So if they are defined already, the existing definitions will be fine.  */
+# ifndef _monodroid_ifa_broadaddr
+#  define _monodroid_ifa_broadaddr ifa_ifu.ifu_broadaddr
+# endif
+# ifndef _monodroid_ifa_dstaddr
+#  define _monodroid_ifa_dstaddr   ifa_ifu.ifu_dstaddr
+# endif
+
+	gpointer ifa_data;               /* Address-specific data (may be unused).  */
+};
+
 /* This is the message we send to the kernel */
 typedef struct {
 	struct nlmsghdr header;
@@ -280,7 +311,7 @@ get_interface_flags_by_index (gint index, struct _monodroid_ifaddrs **ifaddrs_he
 static gint
 calculate_address_netmask (struct _monodroid_ifaddrs *ifa, struct ifaddrmsg *net_address);
 
-#if DEBUG
+#ifndef RELEASE
 static void
 print_ifla_name (gint id);
 
@@ -318,7 +349,7 @@ _monodroid_freeifaddrs (struct _monodroid_ifaddrs *ifa)
 		return;
 	}
 
-#if DEBUG
+#ifndef RELEASE
 	print_address_list ("List passed to freeifaddrs", ifa);
 #endif
 	cur = ifa;
@@ -343,32 +374,39 @@ ves_icall_System_Net_NetworkInformation_NetworkInterfaceFactory_UnixNetworkInter
 		return ret;
 
 	*ifap = NULL;
-	struct _monodroid_ifaddrs *ifaddrs_head = 0;
-	struct _monodroid_ifaddrs *last_ifaddr = 0;
+	struct _monodroid_ifaddrs *ifaddrs_head = NULL;
+	struct _monodroid_ifaddrs *ifaddrs_last = NULL;
 	netlink_session session;
 
-	if (open_netlink_session (&session) < 0) {
+	if (open_netlink_session (&session) < 0)
 		goto cleanup;
-	}
 
 	/* Request information about the specified link. In our case it will be all of them since we
 	   request the root of the link tree below
 	*/
-	if ((send_netlink_dump_request (&session, RTM_GETLINK) < 0) ||
-			(parse_netlink_reply (&session, &ifaddrs_head, &last_ifaddr) < 0) ||
-			(send_netlink_dump_request (&session, RTM_GETADDR) < 0) ||
-			(parse_netlink_reply (&session, &ifaddrs_head, &last_ifaddr) < 0)) {
-		_monodroid_freeifaddrs (ifaddrs_head);
+	if (send_netlink_dump_request (&session, RTM_GETLINK) < 0)
 		goto cleanup;
-	}
+
+	if (parse_netlink_reply (&session, &ifaddrs_head, &ifaddrs_last) < 0)
+		goto cleanup;
+
+	if (send_netlink_dump_request (&session, RTM_GETADDR) < 0)
+		goto cleanup;
+
+	if (parse_netlink_reply (&session, &ifaddrs_head, &ifaddrs_last) < 0)
+		goto cleanup;
 
 	ret = 0;
 	*ifap = ifaddrs_head;
-#if DEBUG
+
+#ifndef RELEASE
 	print_address_list ("Initial interfaces list", *ifap);
 #endif
 
-  cleanup:
+cleanup:
+	if (ifaddrs_head) {
+		_monodroid_freeifaddrs (ifaddrs_head);
+	}
 	if (session.sock_fd >= 0) {
 		close (session.sock_fd);
 		session.sock_fd = -1;
@@ -576,7 +614,7 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 			goto cleanup;
 		}
 
-#if DEBUG
+#ifndef RELEASE
 		mono_trace (G_LOG_LEVEL_DEBUG, MONO_TRACE_ANDROID_NETLINK, "response flags:");
 		if (netlink_reply.msg_flags == 0)
 			mono_trace (G_LOG_LEVEL_DEBUG, MONO_TRACE_ANDROID_NETLINK, "   [NONE]");
@@ -1033,7 +1071,7 @@ get_link_info (const struct nlmsghdr *message)
 
 			default:
 				mono_trace (G_LOG_LEVEL_DEBUG, MONO_TRACE_ANDROID_NETLINK, "     rta_type: ");
-#if DEBUG
+#ifndef RELEASE
 				print_ifla_name (attribute->rta_type);
 #endif
 				break;
@@ -1052,7 +1090,7 @@ get_link_info (const struct nlmsghdr *message)
 	return NULL;
 }
 
-#if DEBUG
+#ifndef RELEASE
 
 static void
 print_ifla_name (gint id)
@@ -1146,7 +1184,7 @@ print_address_list (gchar *title, struct _monodroid_ifaddrs *list)
 	free (msg);
 }
 
-#endif // DEBUG
+#endif // RELEASE
 
 #else // LINUX
 
