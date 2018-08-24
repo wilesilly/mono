@@ -132,12 +132,14 @@ _android-$(1)_CFLAGS= \
 	-fstack-protector \
 	-DMONODROID=1 \
 	-DLINUX=1 \
+	$(if $(filter $(CONFIGURATION),release),-DRELEASE=1,-DDEBUG=1) \
 	$$(android-$(1)_CFLAGS)
 
 _android-$(1)_CXXFLAGS= \
 	-fstack-protector \
 	-DMONODROID=1 \
 	-DLINUX=1 \
+	$(if $(filter $(CONFIGURATION),release),-DRELEASE=1,-DDEBUG=1) \
 	$$(android-$(1)_CXXFLAGS)
 
 _android-$(1)_CPPFLAGS= \
@@ -223,10 +225,12 @@ _android-$(1)_RANLIB=ranlib
 _android-$(1)_STRIP=strip
 
 _android-$(1)_CFLAGS= \
+	$(if $(filter $(CONFIGURATION),release),-DRELEASE=1,-DDEBUG=1) \
 	$$(patsubst %,-I%,$$(JDK_INCLUDE_DIRS)) \
 	$$(android-$(1)_CFLAGS)
 
 _android-$(1)_CXXFLAGS= \
+	$(if $(filter $(CONFIGURATION),release),-DRELEASE=1,-DDEBUG=1) \
 	$$(patsubst %,-I%,$$(JDK_INCLUDE_DIRS)) \
 	$$(android-$(1)_CXXFLAGS)
 
@@ -253,7 +257,7 @@ $$(eval $$(call RuntimeTemplate,android-$(1)))
 endef
 
 ifeq ($(UNAME),Darwin)
-android-host-Darwin_CFLAGS=-mmacosx-version-min=10.9
+android-host-Darwin_CFLAGS=-mmacosx-version-min=10.9)
 $(eval $(call AndroidHostTemplate,host-Darwin))
 else
 ifeq ($(UNAME),Linux)
@@ -287,12 +291,14 @@ _android-$(1)_AC_VARS= \
 _android-$(1)_CFLAGS= \
 	-DWINDOWS=1 \
 	-DXAMARIN_PRODUCT_VERSION=0 \
+	$(if $(filter $(CONFIGURATION),release),-DRELEASE=1,-DDEBUG=1) \
 	$$(patsubst %,-I%,$$(JDK_INCLUDE_DIRS)) \
 	$$(android-$(1)_CFLAGS)
 
 _android-$(1)_CXXFLAGS= \
 	-DWINDOWS=1 \
 	-DXAMARIN_PRODUCT_VERSION=0 \
+	$(if $(filter $(CONFIGURATION),release),-DRELEASE=1,-DDEBUG=1) \
 	$$(patsubst %,-I%,$$(JDK_INCLUDE_DIRS)) \
 	$$(android-$(1)_CXXFLAGS)
 
