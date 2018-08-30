@@ -120,7 +120,7 @@ if [[ ${CI_TAGS} == *'product-sdks-android'* ]];
    then
         echo "IGNORE_PROVISION_ANDROID=1" > sdks/Make.config
         echo "IGNORE_PROVISION_MXE=1" >> sdks/Make.config
-        echo "IGNORE_PACKAGE_LLVM=1" >> sdks/Make.config
+        echo "IGNORE_PROVISION_LLVM=1" >> sdks/Make.config
         echo "DISABLE_CCACHE=1" >> sdks/Make.config
         ${TESTCMD} --label=provision-android --timeout=120m --fatal make -j4 -C sdks/builds provision-android
         if [[ ${CI_TAGS} == *'provision-mxe'* ]]; then

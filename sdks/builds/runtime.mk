@@ -135,12 +135,12 @@ define CrossRuntimeTemplate
 _cross-runtime_$(1)_CONFIGURE_FLAGS= \
 	--target=$(3) \
 	--with-cross-offsets=$(3).h \
-	--with-llvm=$$(TOP)/sdks/out/llvm-$(5)
+	--with-llvm=$$(TOP)/sdks/out/$(5)
 
 .stamp-$(1)-toolchain:
 	touch $$@
 
-.stamp-$(1)-$$(CONFIGURATION)-configure: | $$(if $$(IGNORE_PACKAGE_LLVM),,package-llvm-$(5))
+.stamp-$(1)-$$(CONFIGURATION)-configure: | $$(if $$(IGNORE_PROVISION_LLVM),,provision-$(5))
 
 $$(TOP)/sdks/builds/$(1)-$$(CONFIGURATION)/$(3).h: .stamp-$(1)-$$(CONFIGURATION)-configure $$(TOP)/tools/offsets-tool/MonoAotOffsetsDumper.exe | build-$(4)
 	cd $$(TOP)/sdks/builds/$(1)-$$(CONFIGURATION) && \
